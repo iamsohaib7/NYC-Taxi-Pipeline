@@ -204,3 +204,6 @@ __marimo__/
 
 # ignore the local keys
 keys/
+# ignore orginal and encrypted files
+originals/
+encrypted/
