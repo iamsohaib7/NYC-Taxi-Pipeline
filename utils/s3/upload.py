@@ -43,13 +43,9 @@ s3_client = boto3.client(
 
 
 def upload_file(local_path: Path) -> bool:
-    try:
-        rel = local_path.relative_to(ENCRYPTED_FILES_PATH).as_posix()
-    except Exception:
-        logger.error(f"Cannot determine relative path for {local_path}")
-        return False
 
-    s3_key = f"{S3_PREFIX}/{rel}"
+    file_name = local_path.name
+    s3_key = f"{S3_PREFIX}/{file_name}"
     logger.info(f"Uploading {local_path} → s3://{S3_BUCKET_NAME}/{s3_key}")
 
     try:
@@ -62,30 +58,20 @@ def upload_file(local_path: Path) -> bool:
     return False
 
 
-def upload_all(parallel: bool = True, max_workers: int = 8):
+def upload_all():
     base = Path(ENCRYPTED_FILES_PATH)
     files = [p for p in base.rglob("*") if p.is_file()]
     if not files:
         logger.warning("No files found under encrypted path.")
         return
-
     logger.info(
-        f"Found {len(files)} files. Uploading {'in parallel' if parallel else 'serially'}..."
+        f"Found {len(files)} files. Uploading serially..."
     )
-
-    if parallel:
-        with ThreadPoolExecutor(max_workers=max_workers) as exec:
-            future_map = {exec.submit(upload_file, f): f for f in files}
-            for future in as_completed(future_map):
-                path = future_map[future]
-                success = future.result()
-                logger.info(f"{path} → {'OK' if success else 'FAIL'}")
-    else:
-        for f in files:
-            success = upload_file(f)
-            logger.info(f"{f} → {'OK' if success else 'FAIL'}")
+    for f in files:
+        success = upload_file(f)
+        logger.info(f"{f} → {'OK' if success else 'FAIL'}")
 
 
 if __name__ == "__main__":
-    upload_all(parallel=False)
+    upload_all()
     logger.info("Upload script finished.")
