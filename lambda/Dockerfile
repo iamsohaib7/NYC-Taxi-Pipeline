@@ -1,8 +1,9 @@
 FROM public.ecr.aws/lambda/python:3.12
 
-COPY lambda_function.py ${LAMBDA_TASK_ROOT}
+RUN pip install boto3>=1.40.18 cryptography>=45.0.6 --target "${LAMBDA_TASK_ROOT}"
 
-COPY requirements.txt .
-RUN pip install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
+WORKDIR ${LAMBDA_TASK_ROOT}
+COPY src/ src/
+COPY handler.py .
 
-CMD ["lambda_function.handler"]
+CMD ["handler.handler"]
