@@ -11,6 +11,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 
 def handler(event, context):
     inbound_files = list_inbound_files(S3_BUCKET_NAME, S3_INBOUND_PREFIX)
+    inbound_files = map(lambda x: os.path.basename(x), filter(lambda x: x != "inbound/" or not x.endswith("/"), inbound_files))
 
     for file_name in inbound_files:
         encrypted_data = get_inbound_file(S3_BUCKET_NAME, S3_INBOUND_PREFIX, file_name)
